@@ -1,0 +1,140 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+        }
+        .wishlist {
+            padding: 20px;
+        }
+        .wishlist h2 {
+            color: #000;
+        }
+        .wishlist .trip {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .wishlist .trip img {
+            width: 100px;
+            height: 100px;
+            border-radius: 5px;
+        }
+        .wishlist .actions {
+            display: flex;
+            gap: 10px;
+        }
+        .wishlist .btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .wishlist .btn.book {
+            background: #007bff;
+            color: #fff;
+        }
+        .wishlist .btn.remove {
+            background: #ff0000;
+            color: #fff;
+        }
+        .wishlist nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #fff;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            border-top: 1px solid #ccc;
+        }
+        .wishlist nav a {
+            color: #007bff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="wishlist">
+        <h2>Wishlist</h2>
+        <div class="trip">
+            <div>
+                <img src="bali.jpg" alt="Bali">
+                <h3>Bali</h3>
+                <p>$200-$350/pax</p>
+            </div>
+            <div class="actions">
+                <button class="btn book">Book</button>
+                <button class="btn remove">Remove</button>
+            </div>
+        </div>
+        <div class="trip">
+            <div>
+                <img src="paris.jpg" alt="Paris">
+                <h3>Paris</h3>
+                <p>$300-$450/pax</p>
+            </div>
+            <div class="actions">
+                <button class="btn book">Book</button>
+                <button class="btn remove">Remove</button>
+            </div>
+        </div>
+        <nav>
+            <a href="#">Home</a>
+            <a href="#">Trip</a>
+            <a href="#">Wishlist</a>
+            <a href="#">Profile</a>
+        </nav>
+    </div>
+</body>
+</html>
